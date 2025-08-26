@@ -2,11 +2,11 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "../../../../lib/db";
+import { NextAuthOptions } from "next-auth";
 
-
-const handler = NextAuth({
-  providers: [
-    CredentialsProvider({
+export const authOptions: NextAuthOptions= { 
+providers: [
+  CredentialsProvider({
       // The name to display on the sign in form (e.g. 'Sign in with...')
       name: "Email",
       credentials: {
@@ -17,56 +17,63 @@ const handler = NextAuth({
         },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
-        // const prisma = new PrismaClient();
-        const email = credentials?.Email;
-        const password = credentials?.password;
-        //do the db checks
-        const res = await prisma.user.findFirst({
-          where: { email: email },
-        });
-
-        if (res) {
-          if (password != res.password) {
-            return null;
-          }
-          const user = { id: res.id.toString(), email: res.email };
-          return user;
-        } else {
-          if (email && password) {
-            const creation = await prisma.user.create({
-              data: { email: email, password: password },
-            });
-            let user = { id: creation.id.toString(), email: creation.email };
-            return user;
-          }
-        }
-
-        // Return null if user data could not be retrieved
-        return null;
+      async authorize(credentials, req)
+      {
+        const user = await prisma.user.findFirst({where:{email: credentials?.Email}});
+        if(!user) return null;
+        if(credentials?.password !== user.password) return null
+        console.log(JSON.stringify(user.id))
+        return {id: user.id.toString(), email:user.email}
       },
     }),
-    GoogleProvider({
+
+GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-  ],
-  secret: process.env.NEXTAUTH_SECRET,
-  callbacks: {
-    async signIn({ user, account, profile }) {
-      await prisma.user.upsert({
-        where: { email: user.email ?? undefined},
-        update: {},
-        create: {
-            email: user.email??"",
-            firstName: user.name??""
-        },
-      });
+],
 
-      return true;
-    },
-    
+
+
+secret: process.env.NEXTAUTH_SECRET,
+
+
+
+callbacks: {
+  async signIn({ user }) {
+    if (!user.email) return false;
+
+    // Ensure user exists in DB
+    const dbUser = await prisma.user.upsert({
+      where: { email: user.email },
+      update: {},
+      create: { email: user.email, name: user.name ?? "" },
+    });
+    console.log(JSON.stringify(dbUser))
+
+    // Attach DB id to user object
+    user.id = dbUser.id.toString();
+    return true;
   },
-});
 
+     async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;   // consistent across providers
+        token.email = user.email;
+      }
+      return token;
+    },
+
+
+    async session({ session, token }) {
+  if (session.user) {
+    session.user.id = token.id as string;   // attach from jwt
+    session.user.email = token.email as string;
+  }
+  return session;
+}
+  },
+};
+
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
