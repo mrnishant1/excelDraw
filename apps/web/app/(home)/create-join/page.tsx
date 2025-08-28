@@ -1,19 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { useSession } from "next-auth/react";
 
 //-----------------------API endpoints------------------
 async function creatroom(
-  roomCode: string,
+  roomcode: string,
   userId: string,
   isPrivate: boolean,
   password?: string
 ) {
   try {
-    
-    if (!roomCode.trim() || !userId.trim()) {
+    if (!roomcode.trim() || !userId.trim()) {
       throw new Error("Provide correct credentials");
     }
     if (isPrivate && !password) {
@@ -21,13 +19,16 @@ async function creatroom(
     }
 
     const res = await axios.post("/api/create-room", {
-      roomCode,
+      roomcode,
       userId,
       isPrivate,
       password,
     });
 
-    console.log("Room created:", res.data);
+    // if(res.status === 200 ){
+    //   router.push(`/rooms/${res.data}`)
+    // }
+    
     alert(res.data);
     return res.data;
   } catch (error) {
@@ -45,11 +46,11 @@ async function joinRoom(roomcode: string, userId: string, password?: string) {
       roomcode,
       userId,
       password,
-    });
+    }, { validateStatus: () => true, });
 
-    console.log("Joined room:", res.data);
-    alert(JSON.stringify(res.data));
-    return res.data;
+    alert(res.data.message)
+    
+    
   } catch (error) {
     alert(error);
   }
@@ -71,19 +72,12 @@ export default function CreateRoom() {
     }
   };
 
-
-  // //get userId intead of getting from user
-  // useEffect(() => {
-  //   async function call(){
-  //     const session = await getServerSession(authOptions);
-  //     if(!session) return;
-  //     setuserId(session.user.id);
-  //     console.log(session.user.id)
-    
-  //   };
-  //   call();
-    
-  // }, []);
+  const { data: session } = useSession();
+  useEffect(() => {
+    console.log(session?.user.id);
+    if (!session?.user.id) return;
+    setuserId(session.user.id);
+  }, [session]);
 
   return (
     <>

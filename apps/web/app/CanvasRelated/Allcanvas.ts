@@ -166,7 +166,9 @@ export function DrawingHandler(
       rcs.line(myMouseX, myMouseY, endX, endY);
       break;
     case "pencil":
-      rcs.circle(endX, endY, 0.1);
+      // rcs.circle(endX, endY, 0.1);
+      
+      console.log("pencil");
       break;
     case "select":
       console.log("select mode");
@@ -237,7 +239,7 @@ export function DrawingMessageHandler(
   DrawingHandler(shape, myMouseX, myMouseY, endX, endY);
   if (!isclicked) {
     if (shape != "grab") {
-      allExistingShapes.push({shape, myMouseX, myMouseY, endX, endY});
+      allExistingShapes.push({ shape, myMouseX, myMouseY, endX, endY });
     } else {
       allExistingShapes.forEach((shape) => {
         if (endX && endY && myMouseX && myMouseY) {

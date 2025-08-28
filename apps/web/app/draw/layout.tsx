@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { Leftside } from "../Leftpage";
 
 export default function Layout({children}: {
   children:ReactNode

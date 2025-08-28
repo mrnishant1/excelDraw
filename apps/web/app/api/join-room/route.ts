@@ -21,14 +21,14 @@ export async function POST(req: NextRequest) {
       include:{memberships:true}
     });
     if (!room) {
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+      return NextResponse.json({ error: "Room not found",message:"Room NOt found" }, { status: 404 });
     }
     // private room check
     if (room.isPrivate) {
       if (room.password !== password) {
         return NextResponse.json(
-          { error: "Invalid password" },
-          { status: 403 }
+          { error: "Invalid_Input",message:"Correct Password is required!" },
+          { status: 400 }
         );
       }
     }
@@ -36,7 +36,8 @@ export async function POST(req: NextRequest) {
       (m) => m.userId === userId && m.roomId === room.id
     );
     if (alreadymember) {
-      return NextResponse.json({ error: "Already member" }, { status: 403 });
+      
+      return NextResponse.json({ error: "Already member", message:"Your are already a member" }, { status: 403 });
     }
 
     // create membership for both private (with valid password) and public rooms
@@ -44,7 +45,8 @@ export async function POST(req: NextRequest) {
       data: { roomId: room.id, userId: userId, role: Role.USER },
     });
 
-    return NextResponse.json({ success: true, membership });
+    return NextResponse.json({success: true, message:"Joined the Room",membership },{status: 200 });
+    
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || "Something went wrong" },
