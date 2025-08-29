@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
+import { createRoomSchema, roomschema } from "@/app/signin/loginschema";
+import { redirect } from "next/navigation";
 
 //-----------------------API endpoints------------------
 async function creatroom(
@@ -11,64 +13,79 @@ async function creatroom(
   password?: string
 ) {
   try {
-    if (!roomcode.trim() || !userId.trim()) {
-      throw new Error("Provide correct credentials");
-    }
-    if (isPrivate && !password) {
-      throw new Error("Password is required for private rooms.");
-    }
-
-    const res = await axios.post("/api/create-room", {
+    const parsed = createRoomSchema.safeParse({ 
       roomcode,
       userId,
       isPrivate,
-      password,
-    });
+      password,});
 
-    // if(res.status === 200 ){
-    //   router.push(`/rooms/${res.data}`)
-    // }
-    
-    alert(res.data);
-    return res.data;
+    if (!parsed.success) {
+      console.log("not parsed cuccessfully");
+      const errors = parsed.error.flatten().fieldErrors;
+      const stringifyError = JSON.stringify(errors);
+      return stringifyError;
+    }
+
+    if (isPrivate && !password) {
+      return "Password is required for private rooms.";
+    }
+
+ const res = await axios.post(
+      "/api/create-room",
+      { ...parsed },
+      { validateStatus: () => true },
+      
+    );
+
+    return (res.data);
   } catch (error) {
     alert(error);
   }
 }
+
+//Join-Room----API-----------------
 async function joinRoom(roomcode: string, userId: string, password?: string) {
   console.log("frontend hit----------------" + roomcode, userId);
+
   try {
-    if (!roomcode.trim() || !userId.trim()) {
-      throw new Error("Provide correct credentials");
+    const parsed = roomschema.safeParse({ roomcode, userId, password });
+    if (!parsed.success) {
+      console.log("not parsed cuccessfully");
+      const errors = parsed.error.flatten().fieldErrors;
+      const stringifyError = JSON.stringify(errors);
+      return stringifyError;
     }
 
-    const res = await axios.post("/api/join-room", {
-      roomcode,
-      userId,
-      password,
-    }, { validateStatus: () => true, });
+    const res = await axios.post(
+      "/api/join-room",
+      { ...parsed },
+      { validateStatus: () => true }
+    );
 
-    alert(res.data.message)
-    
-    
+    return res.data;
   } catch (error) {
-    alert(error);
+    return error;
   }
 }
 
 //------------------------Components----------------------------------
 export default function CreateRoom() {
   const [roomcode, setroomcode] = useState<string>("");
-  const [password, setpassword] = useState<string>("");
+  const [password, setpassword] = useState<string | undefined>();
   const [userId, setuserId] = useState<string>("");
   const [create, setcreate] = useState(true);
   const [publicroom, setprivacy] = useState(true);
+  const [FormErrors, setFormErrors] = useState<string | null>();
 
   const handlesubmit = async () => {
     if (create) {
-      creatroom(roomcode, userId, !publicroom, password);
+      const response = await creatroom(roomcode, userId, !publicroom, password);
+      setFormErrors(response.message);
+      redirect(`/rooms/${response.room.id}`)
     } else {
-      joinRoom(roomcode, userId, password);
+      const response = await joinRoom(roomcode, userId, password);
+      setFormErrors(response.message);
+      redirect(`/rooms/${response.alreadymember.roomId}`)
     }
   };
 
@@ -96,6 +113,9 @@ export default function CreateRoom() {
           <h2 className="text-2xl font-hand mb-6 text-center border-b-2 border-gray-800 pb-2">
             {create ? "Create New Room" : "Join Room"}
           </h2>
+
+          {/* Error OR Response */}
+          <div className="text-red-400">{FormErrors}</div>
 
           <div className="space-y-4">
             {/* roomname */}

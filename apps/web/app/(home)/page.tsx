@@ -1,9 +1,11 @@
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-gray-50 flex flex-col  items-center justify-center px-6">
+      
+      <div></div>
       {/* Hero Section */}
       <header className="text-center max-w-2xl">
-        <h1 className="text-5xl font-bold text-gray-800 mb-4">
+        <h1 className="text-6xl font-cursive  text-gray-800 mb-4">
           DoodlesDraw
         </h1>
         <p className="text-lg text-gray-600 mb-6">

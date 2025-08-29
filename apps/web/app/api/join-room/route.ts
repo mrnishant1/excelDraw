@@ -4,12 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-
     
     const body = await req.json();   // read full JSON
     console.log("Full request body:", body);
 
-    const { roomcode, userId, password } = body;  // destructure after logging
+    const { roomcode, userId, password } = body.data;  // destructure after logging
     console.log("backend hit---------------------------", roomcode, userId, password);
 
 
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (!room) {
       return NextResponse.json({ error: "Room not found",message:"Room NOt found" }, { status: 404 });
     }
-    // private room check
+    // private room check-------------
     if (room.isPrivate) {
       if (room.password !== password) {
         return NextResponse.json(
@@ -35,9 +34,8 @@ export async function POST(req: NextRequest) {
     const alreadymember = room.memberships.find(
       (m) => m.userId === userId && m.roomId === room.id
     );
-    if (alreadymember) {
-      
-      return NextResponse.json({ error: "Already member", message:"Your are already a member" }, { status: 403 });
+    if (alreadymember) {  
+      return NextResponse.json({ error: "Already member", message:"Your are already a member",membership:alreadymember }, { status: 403});
     }
 
     // create membership for both private (with valid password) and public rooms
@@ -45,7 +43,7 @@ export async function POST(req: NextRequest) {
       data: { roomId: room.id, userId: userId, role: Role.USER },
     });
 
-    return NextResponse.json({success: true, message:"Joined the Room",membership },{status: 200 });
+    return NextResponse.json({success: true, message:"Joined the Room",membership:membership },{status: 200 });
     
   } catch (err: any) {
     return NextResponse.json(

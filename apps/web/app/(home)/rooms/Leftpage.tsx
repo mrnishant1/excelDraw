@@ -15,7 +15,7 @@ export async function Leftside() {
     where: { memberships: { some: { userId: userId } } },
   });
   console.log(response);
-
+  
   if (!response || response.length === 0) {
     return <div className="text-center text-gray-500 p-6">You haven’t joined any rooms yet 🚪</div>;
   }

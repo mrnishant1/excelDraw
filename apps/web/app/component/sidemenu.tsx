@@ -16,7 +16,7 @@ export default function Sidemenu({visiblety}:{visiblety:ReactNode}) {
             <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center " href="/api/signin">  {<CiLogin/>} Login</Link>
             <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center " href="/create-join"> {<TbAccessPoint/>} Create Room</Link>
             <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center " href="/create-join"> {<RiGroup2Line/>} Join Room</Link>
-            <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center " href="/api/signout"> {<IoMdLogOut/>} Logout</Link>
+            <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center " href="/api/auth/signout"> {<IoMdLogOut/>} Logout</Link>
             <div data-orientation="horizontal" role="none" className="shrink-0 bg-gray-700 h-[1px] w-full my-4 dark:bg-default-border-color-dark"></div>
             <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 " href="https://github.com/mrnishant1/excelDraw">  Github</Link>
             <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 " href="https://www.linkedin.com/in/nishant-kumar-692477226/">  Linkedin</Link>

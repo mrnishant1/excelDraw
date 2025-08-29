@@ -1,19 +1,28 @@
 import { prisma } from "@/lib/db";
 import { Role } from "@/lib/generated/prisma";
+import { redirect } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { roomcode, userId, isPrivate, password } = await req.json();
+  const body = await req.json(); // read full JSON
+  console.log("Full request body:", body);
 
+  const { roomcode, userId,isPrivate, password } = body.data; // destructure after logging
+  console.log(
+    "backend hit---------------------------",
+    roomcode,
+    userId,
+    isPrivate,
+    password
+  );
 
-  console.log(roomcode, userId, isPrivate, password);
-  if (!roomcode || !userId) throw new Error("roomcode or userID were missing");
+  if (!roomcode || !userId) return ("roomcode or userID were missing");
   const existingRoom = await prisma.rooms.findUnique({
     where: { roomcode: roomcode },
   });
-  console.log("room is ---------" + existingRoom);
   if (existingRoom) {
-    return NextResponse.json({ error: "roomcode Not unique" }, { status: 409 });
+    return NextResponse.json({ error: "roomcode Not unique",message:"Room Name is not unique" }, { status: 409 });
+
   } else {
     if (!isPrivate || (isPrivate && !!password)) {
       const room = await prisma.rooms.create({
@@ -34,7 +43,8 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json({ success: true, room });
+      return (NextResponse.json({ success: true, message:"Room has been created",room },{status: 200})
+      )
     }
   }
 }
