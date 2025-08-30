@@ -1,12 +1,11 @@
 import Toolbar from "../../../component/toolbar";
 import { CanvasSheet } from "@/app/component/canvas";
-import { TextChat } from "@/app/component/TextChat";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { redirect } from "next/navigation";
 import ErrorPage from "@/app/component/error";
+import { ShareButton } from "../../../component/sharebutton";
 
 // import
 interface Props {
@@ -14,7 +13,7 @@ interface Props {
 }
 
 export default async function RoomPage({ params }: Props) {
-
+  
   const roomId = params.id
 
   //now get the userid from session see it membership & roomId
@@ -34,9 +33,9 @@ export default async function RoomPage({ params }: Props) {
   //frontend--------------------------------------
   return (
     <div className="w-svw h-svh">
-    
+      <ShareButton params={roomId}/>
       <Toolbar />
-      <CanvasSheet />
+      <CanvasSheet params={roomId} />
     </div>
   );
 }

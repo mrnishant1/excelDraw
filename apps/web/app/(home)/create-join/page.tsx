@@ -85,7 +85,7 @@ export default function CreateRoom() {
     } else {
       const response = await joinRoom(roomcode, userId, password);
       setFormErrors(response.message);
-      redirect(`/rooms/${response.alreadymember.roomId}`)
+      redirect(`/rooms/${response.membership.roomId}`)
     }
   };
 

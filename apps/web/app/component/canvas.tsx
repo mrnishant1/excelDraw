@@ -7,19 +7,22 @@ import {
 
 import { AllmessageHandler } from "@/app/CanvasRelated/AllmessageHandler";
 import { useServerSocket } from "@/hooks/useserver";
-
-export function CanvasSheet() {
+interface Props {
+  params: string;
+}
+export function CanvasSheet({params}:Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { socket, connect, disconnect,loading } = useServerSocket();
+  const { socket, connect, disconnect, loading } = useServerSocket();
+
 
   //My code is Like building block, you'll find function as building block with lines like ---------------------------------------------------------------
   //My code is Like building block, you'll find function as building block with lines like ---------------------------------------------------------------
-  //My code is Like building block, you'll find function as building block with lines like --------------------------------------------------------------- 
+  //My code is Like building block, you'll find function as building block with lines like ---------------------------------------------------------------
 
-
-// Helps in canvas Dimension as per canvas not as per browser-----------------
-useEffect(() => {
+  // Helps in canvas Dimension as per canvas not as per browser-----------------
+  useEffect(() => {
     if (!canvasRef.current) {
+      console.log("canvasRef isn't here------------------")
       return;
     }
     const canvas = canvasRef.current;
@@ -28,7 +31,7 @@ useEffect(() => {
     canvas.height = rect.height;
   }, []);
 
-// Resize + Scroll effect, won't affect you Drawinngs -----------------------------------
+  // Resize + Scroll effect, won't affect you Drawinngs -----------------------------------
   useEffect(() => {
     const handleResizeOrScroll = () => {
       const canvas = canvasRef.current;
@@ -49,39 +52,51 @@ useEffect(() => {
     };
   }, []);
 
-//Helps in websocket connection( ) --------------------------
-useEffect(() => {
-  connect();
-}, [connect]);
-
-
-//(Runs two time) as connection takes time and at first loading = false, connection done loading = true ------------------------------
-useEffect(() => {
-  if (loading || !canvasRef.current || !socket.current) return;
-  const cleanup = CanvastoDraw(canvasRef.current, socket.current);
-
-  return () => {
-    cleanup?.();
-    disconnect();
-  };
-}, [loading, socket.current, disconnect]);
-
-//Helps in Message to other user in room-----------------------------
+  //(Runs two time) as connection takes time and at first loading = false, connection done loading = true ------------------------------
   useEffect(() => {
-    if (!socket.current) return;
-    const onMessage = (msg: string) => {
-      const content = AllmessageHandler(msg);
-    };
-    socket.current.on("message", onMessage);
+    console.log("🔥 loading changed to:", loading);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    let cleanup: (() => void) | undefined;
+
+    if (loading) {
+      // Only local drawing
+      cleanup = CanvastoDraw(canvas);
+    } else if (socket) {
+      // Collaborative drawing with socket
+      cleanup = CanvastoDraw(canvas,params, socket);
+    }
+
     return () => {
-      if (socket.current) socket.current.off("message", onMessage);
-      disconnect(); 
+      cleanup?.();
+      //disconnect(); //<- only if you want to stop collab on unmount
     };
-  }, []);
+  }, [loading]);
+
+  //Helps in Message to other user in room-----------------------------
+  
+  useEffect(() => {
+    console.log("useEffect ran that listen message in canvas.tsx")
+    if (!socket) {console.log("There is no socke in canvas.tsx");return};
+    
+    console.log("socket that is in canvas.ts"+socket)
+    socket.on("message", (msg: string) => {
+      console.log(msg+"msg that come into canvas.tsx-------")
+      AllmessageHandler(msg);
+    });
+
+    return () => {
+      if (socket) socket.off("message", (msg: string) => {
+      console.log(msg+"msg that come into canvas.tsx-------")
+      AllmessageHandler(msg);
+    });
+      disconnect();
+    };
+  }, [loading]);
 
   return (
     <div className="bg-gray-400 w-[100%] h-[100%]">
-      
       <canvas
         ref={canvasRef}
         style={{

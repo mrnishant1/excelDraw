@@ -7,6 +7,8 @@ import { ChatType } from "../Types/tooltype";
 // import { serverSocket } from "@/hooks/serverSocket";
 
 let allExistingShapes: CurrentShape[] = [];
+// localStorage.setItem("shapes", JSON.stringify(allExistingShapes));
+
 let shape: ToolType;
 let isclicked = false;
 let myMouseX: number | null = null;
@@ -16,6 +18,10 @@ let endY: number | null = null;
 let rcs: RoughCanvas;
 let ctx: CanvasRenderingContext2D | null;
 let globalsocket: Socket | null;
+let LocalRoomId: string;
+let Localfill: string = "";
+let Localstroke: string = "";
+let LocalstrokeWidth: number = 10;
 
 interface CurrentShape {
   shape: ToolType;
@@ -27,22 +33,35 @@ interface CurrentShape {
 
 export function CanvastoDraw(
   canvas: HTMLCanvasElement,
-  socketstore: Socket | null
+  roomId?: string,
+  socketstore?: Socket | null
 ) {
   console.log("socket.current++: ", socketstore);
+
+  if (roomId) {
+    LocalRoomId = roomId;
+    console.log("good RoomId here in Allcanvas");
+  }
+
   rcs = rough.canvas(canvas);
   ctx = canvas.getContext("2d");
-  globalsocket = socketstore;
+  if (!socketstore) {
+    console.log("socket and globalsocket isn't here");
+    globalsocket = null;
+  } else {
+    globalsocket = socketstore;
+  }
 
   const rect = canvas.getBoundingClientRect();
 
   if (!ctx) return;
   // ✅ define handlers with stable references
   const handleMouseDown = (e: MouseEvent) => mousedown(e);
-  const handleMouseUp = (e: MouseEvent) => mouseup(e, socketstore);
+  const handleMouseUp = (e: MouseEvent) => mouseup(e);
   const handleMouseMove = (e: MouseEvent) => {
-    shape = useShapeStore.getState().shape; // read fresh value
-    mousemove(e, shape, rcs, rect, socketstore);
+    // Gets the shape value {GLOBAL ZUSTAND STATE VARIABLE}.................................................
+    shape = useShapeStore.getState().shape;
+    mousemove(e, shape, rcs, rect);
   };
 
   // ✅ attach listeners
@@ -71,8 +90,7 @@ const mousemove = (
   shape: ToolType,
 
   rcs: RoughCanvas,
-  rect: DOMRect,
-  socketstore?: Socket | null
+  rect: DOMRect
 ) => {
   if (!isclicked || myMouseX == null || myMouseY == null) return;
 
@@ -83,15 +101,32 @@ const mousemove = (
     console.log("No canvas contextRendere2D");
     return;
   }
+
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // ✅ prevent spam
   drawAgainPreviousShape();
-  DrawingHandler(shape, myMouseX, myMouseY, endX, endY);
+
+  DrawingHandler(
+    shape,
+    myMouseX,
+    myMouseY,
+    endX,
+    endY,
+    Localfill,
+    Localstroke,
+    LocalstrokeWidth
+  );
 
   let localshape = { shape, myMouseX, myMouseY, endX, endY, isclicked };
-  convertAndSend("a", ChatType.DRAWING, JSON.stringify(localshape));
+  //UserId neeed to put here instead of hardcode one---------------------------------------------------------------------?????????????????????????ERORRRRRRRRRRRRRRRRRRRRRRRRRR
+  convertAndSend(
+    "a",
+    LocalRoomId,
+    ChatType.DRAWING,
+    JSON.stringify(localshape)
+  );
 };
 
-const mouseup = (e: MouseEvent, socketstore?: Socket | null) => {
+const mouseup = (e: MouseEvent) => {
   isclicked = false;
 
   if (myMouseX == null || myMouseY == null) return;
@@ -113,8 +148,13 @@ const mouseup = (e: MouseEvent, socketstore?: Socket | null) => {
       }
     });
   }
-
-  convertAndSend("a", ChatType.DRAWING, JSON.stringify(localshape));
+  //this need to be changes userId is hardcoded for now-----------
+  convertAndSend(
+    "a",
+    LocalRoomId,
+    ChatType.DRAWING,
+    JSON.stringify(localshape)
+  );
 };
 
 export function drawAgainPreviousShape() {
@@ -124,7 +164,10 @@ export function drawAgainPreviousShape() {
       shape.myMouseX,
       shape.myMouseY,
       shape.endX,
-      shape.endY
+      shape.endY,
+      Localfill,
+      Localstroke,
+      LocalstrokeWidth
       // rcs
     );
   });
@@ -135,23 +178,34 @@ export function DrawingHandler(
   myMouseX: number,
   myMouseY: number,
   endX: number,
-  endY: number
+  endY: number,
+  fill: string,
+  stroke: string,
+  strokeWidth: number | 1
+
   // rcs: RoughCanvas
 ) {
   if (!ctx) {
     console.log("No canvas contextRendere2D");
     return;
   }
-
   switch (shape) {
     case "rectangle":
-      rcs.rectangle(myMouseX, myMouseY, endX - myMouseX, endY - myMouseY);
+      rcs.rectangle(myMouseX, myMouseY, endX - myMouseX, endY - myMouseY, {
+        fill: Localfill,
+        stroke: Localstroke,
+        strokeWidth: strokeWidth,
+      });
+
       break;
     case "circle":
       rcs.circle(
         myMouseX,
         myMouseY,
-        Math.abs(endY - myMouseY) + Math.abs(endX - myMouseX)
+        Math.abs(endY - myMouseY) + Math.abs(endX - myMouseX),
+        {  fill: Localfill,
+        stroke: Localstroke,
+        strokeWidth: strokeWidth,}
       );
       break;
     case "ellipse":
@@ -159,15 +213,22 @@ export function DrawingHandler(
         myMouseX,
         myMouseY,
         Math.abs(endX - myMouseX),
-        Math.abs(endY - myMouseY)
+        Math.abs(endY - myMouseY),
+        { fill: Localfill,
+        stroke: Localstroke,
+        strokeWidth: strokeWidth, }
       );
       break;
     case "line":
-      rcs.line(myMouseX, myMouseY, endX, endY);
+      rcs.line(myMouseX, myMouseY, endX, endY, {
+        fill: Localfill,
+        stroke: Localstroke,
+        strokeWidth: strokeWidth,
+      });
       break;
     case "pencil":
-      // rcs.circle(endX, endY, 0.1);
-      
+      rcs.rectangle(endX, endY, 0.2, 0.2);
+
       console.log("pencil");
       break;
     case "select":
@@ -202,7 +263,10 @@ function Grab(ctx: CanvasRenderingContext2D, dx: number, dy: number) {
       shape.myMouseX,
       shape.myMouseY,
       shape.endX,
-      shape.endY
+      shape.endY,
+      Localfill,
+      Localstroke,
+      LocalstrokeWidth
       // rcs
     );
   });
@@ -211,17 +275,24 @@ function Grab(ctx: CanvasRenderingContext2D, dx: number, dy: number) {
 
 function convertAndSend(
   userId: string | null,
+  roomId: string,
   type: ChatType,
   content: string | null
 ) {
   if (globalsocket && content !== null) {
     let convertedMessage = {
       userId: userId ?? "",
-      roomId: "",
+      roomId: roomId,
       type: type,
       content: content,
     };
-    globalsocket.send(JSON.stringify(convertedMessage));
+
+    //Message send to Backend Socket
+    // console.log("message sent from Allcanvas.ts")
+    globalsocket.emit("sendMessage", {
+      roomId,
+      message: JSON.stringify(convertedMessage),
+    });
   }
 }
 
@@ -236,7 +307,16 @@ export function DrawingMessageHandler(
   if (!ctx) return;
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   drawAgainPreviousShape();
-  DrawingHandler(shape, myMouseX, myMouseY, endX, endY);
+  DrawingHandler(
+    shape,
+    myMouseX,
+    myMouseY,
+    endX,
+    endY,
+    Localfill,
+    Localstroke,
+    LocalstrokeWidth
+  );
   if (!isclicked) {
     if (shape != "grab") {
       allExistingShapes.push({ shape, myMouseX, myMouseY, endX, endY });

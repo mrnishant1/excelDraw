@@ -1,40 +1,44 @@
+import { create } from "zustand";
 import { io, Socket } from "socket.io-client";
-import { useRef, useState, useCallback } from "react";
 
-export function useServerSocket(): {
-  socket: React.MutableRefObject<Socket | null>;
-  connect: () => void;
-  disconnect: () => void;
+type ServerState = {
+  socket: Socket | null;
   loading: boolean;
-} {
-  const socketRef = useRef<Socket | null>(null);
-  const [loading, setLoading] = useState(true);
+  connect: (roomId:string) => void;
+  disconnect: () => void;
+};
 
-  const connect = useCallback(() => {
-    if (!socketRef.current) {
-      setLoading(true);
-      const s = io("http://localhost:4000");
-      socketRef.current = s;
+export const useServerSocket = create<ServerState>((set, get) => ({
+  socket: null,
+  loading: true,
 
-      s.on("connect", () => {
-        console.log("Frontend connected ✅");
-        setLoading(false);
-      });
+  connect: (roomId) => {
+    if (get().socket) return;
 
-      s.on("disconnect", () => {
-        console.log("Frontend disconnected ❌");
-        setLoading(true);
-      });
+    set({ loading: true });
+    const s = io("http://localhost:4000");
+
+    s.on("connect", () => {
+      console.log("Frontend connected ✅");
+      //Emit helps in making custom listener--------------------------
+      s.emit('joinRoom',roomId);
+      set({ loading: false, socket: s });
+    });
+
+    s.on("disconnect", () => {
+      console.log("Frontend disconnected ❌");
+      set({ loading: true, socket: null });
+    });
+
+   
+  },
+
+  disconnect: () => {
+    const sock = get().socket;
+    if (sock) {
+      sock.disconnect();
+      set({ socket: null, loading: true });
     }
-  }, []);
+  },
 
-  const disconnect = useCallback(() => {
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current = null;
-      setLoading(true);
-    }
-  }, []);
-
-  return { socket: socketRef, connect, disconnect, loading };
-}
+}));

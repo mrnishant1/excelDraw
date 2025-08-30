@@ -21,28 +21,30 @@ const io = new Server(httpserver, {
 });
 //A connection of client to WS server as socket------------------
 io.on("connection", (socket) => {
-//All message handle by the handle message function---------------------
-  function handleMessages(msg: string) {
-    console.log("message from client:", msg);
-    // const message_recieved:{userId:string, roomId: string, type: ChatType, content:string} = JSON.parse(msg);
-    broadcastMessage(socket, msg);
-  }
-
   console.log("a user connected:", socket.id);
-  socket.on("message", handleMessages);
+
+  socket.on('joinRoom',(roomId)=>{
+    socket.join(roomId);
+    console.log(`${socket.id} joined room ${roomId}`);
+  })
+
+
+  socket.on("sendMessage", ({ roomId, message }) => {
+     console.log("message came on socketserver index.ts")
+    socket.to(roomId).emit("message", message);
+  });
+
+
 
   socket.on("disconnect", () => {
     console.log("user disconnected");
   });
-
-
 });
+
+
+
+
 
 httpserver.listen(4000, () => {
   console.log("Socket.IO server running on http://localhost:4000");
 });
-
-function broadcastMessage(socket: Socket, msg: string) {
-  console.log("message broadcasted from backend")
-  socket.broadcast.emit("message", msg);
-}
