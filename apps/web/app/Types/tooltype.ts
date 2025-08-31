@@ -43,3 +43,18 @@ export interface Cords {
   x: number;
   y: number;
 }
+
+export enum Color {
+  Black = "#000000",
+  White = "#FFFFFF",
+  Red = "#FF0000",
+  Green = "#00FF00",
+  Blue = "#0000FF",
+  Yellow = "#FFFF00",
+  Cyan = "#00FFFF",
+  Magenta = "#FF00FF",
+  Orange = "#FFA500",
+  Purple = "#800080",
+  Gray = "#808080",
+  Transparent = "rgba(0,0,0,0)"
+}

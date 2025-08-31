@@ -12,6 +12,8 @@ export function AllmessageHandler(msg: string) {
     type: ChatType;
     content: string;
   } = JSON.parse(msg);
+
+
   if (message_recieved.type === ChatType.TEXT) {
     return message_recieved.content;
   } else if (message_recieved.type === ChatType.DRAWING) {
@@ -23,6 +25,9 @@ export function AllmessageHandler(msg: string) {
         movingX: number;
         movingY: number;
         isclicked: boolean;
+        Localfill:string|"";
+        Localstroke:string|"";
+        LocalstrokeWidth:number|1;
       } = JSON.parse(message_recieved.content);
       DrawingMessageHandler(
         parsedDrawingMessage.shape,
@@ -30,7 +35,11 @@ export function AllmessageHandler(msg: string) {
         parsedDrawingMessage.myMouseY,
         parsedDrawingMessage.movingX,
         parsedDrawingMessage.movingY,
-        parsedDrawingMessage.isclicked
+        parsedDrawingMessage.isclicked,
+        parsedDrawingMessage.Localfill,
+        parsedDrawingMessage.Localstroke,
+        parsedDrawingMessage.LocalstrokeWidth,
+
       );
 
       return message_recieved.content;

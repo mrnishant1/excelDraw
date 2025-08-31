@@ -1,6 +1,6 @@
 import { Socket } from "socket.io-client";
 import rough from "roughjs";
-import { useShapeStore } from "@/hooks/useShape";
+import { useStrokeColor, useShapeStore, useBGFill } from "@/hooks/useShape";
 import { ToolType } from "../Types/tooltype";
 import { RoughCanvas } from "roughjs/bin/canvas";
 import { ChatType } from "../Types/tooltype";
@@ -10,6 +10,7 @@ import { CurrentShape, Shape, PencilShape, Cords } from "../Types/tooltype";
 
 let allExistingShapes: Shape[] = [];
 
+
 let shape: ToolType;
 let isclicked = false;
 let myMouseX: number | null = null;
@@ -18,10 +19,14 @@ let rcs: RoughCanvas;
 let ctx: CanvasRenderingContext2D | null;
 let globalsocket: Socket | null;
 let LocalRoomId: string;
-let Localfill: string = "red";
+let Localfill: string = "blue";
 let Localstroke: string = "";
 let LocalstrokeWidth: number = 1;
 let pencilPath: Cords[] = [];
+let remotePencilPath: Cords[] = [];
+let lastRemotePoint: { x: number; y: number } | null = null;
+let streamPrevX: number | null = null;
+let streamPrevY: number | null = null;
 
 function isPencil(s: Shape): s is PencilShape {
   return s.shape === "pencil";
@@ -59,6 +64,9 @@ export function CanvastoDraw(
   const handleMouseMove = (e: MouseEvent) => {
     // Gets the shape value {GLOBAL ZUSTAND STATE VARIABLE}.................................................
     shape = useShapeStore.getState().shape;
+    Localstroke = useStrokeColor.getState().strokecolor;
+    Localfill = useBGFill.getState().bgcolor;
+
     mousemove(e, shape, rcs, rect);
   };
 
@@ -124,10 +132,10 @@ const mousemove = (
       Localstroke,
       LocalstrokeWidth
     );
-    drawAgainPreviousShape(ctx);
+    if(shape !=='grab') drawAgainPreviousShape(ctx);
   }
 
-  let localshape = { shape, myMouseX, myMouseY, movingX, movingY, isclicked };
+  let localshape = { shape, myMouseX, myMouseY, movingX, movingY, isclicked,Localfill,Localstroke,LocalstrokeWidth };
   //UserId neeed to put here instead of hardcode one---------------------------------------------------------------------?????????????????????????ERORRRRRRRRRRRRRRRRRRRRRRRRRR
   convertAndSend(
     "a",
@@ -151,8 +159,9 @@ const mouseup = (e: MouseEvent, ctx: CanvasRenderingContext2D | null) => {
   let endY = e.clientY - rect.top;
   let movingX = endX;
   let movingY = endY;
-  let localshape = { shape, myMouseX, myMouseY, movingX, movingY, isclicked };
-  finalizeShape(shape, myMouseX, myMouseY, endX, endY); //Also resets pencilPath
+  let localshape = { shape, myMouseX, myMouseY, movingX, movingY, isclicked,Localfill,Localstroke,LocalstrokeWidth };
+
+  finalizeShape(shape, myMouseX, myMouseY, endX, endY,Localfill,Localstroke,LocalstrokeWidth); //Also resets pencilPath
 
   //this need to be changes userId is hardcoded for now-----------
   convertAndSend(
@@ -167,7 +176,6 @@ const mouseup = (e: MouseEvent, ctx: CanvasRenderingContext2D | null) => {
 export function drawAgainPreviousShape(ctx:CanvasRenderingContext2D) {
   allExistingShapes.forEach((s) => {
     if (s.shape === "pencil") {
-      console.log("Previous pencil called ");
       ctx.beginPath();
       s.points.forEach((p, i) => {
         if (i === 0) ctx.moveTo(p.x, p.y);
@@ -202,7 +210,6 @@ export function DrawingHandler(
 
   // rcs: RoughCanvas
 ) {
-  console.log("DrawingHandler called:", shape, myMouseX, myMouseY, endX, endY);
 
   if (!ctx) {
     console.log("No canvas contextRendere2D");
@@ -312,27 +319,51 @@ export function DrawingMessageHandler(
   myMouseY: number,
   MessageendX: number,
   MessageendY: number,
-  isclicked: boolean
+  isclicked: boolean,
+  Localfill:string|"",
+  Localstroke:string|"",
+  LocalstrokeWidth:number|1,
 ) {
   if (!ctx) {
     console.log("No CTX in drawingMessageHandler");
     return;
   }
 
+  if(shape !=="pencil"){
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   drawAgainPreviousShape(ctx);
+  }
 
   // draw the live one
 
   if (shape === "pencil") {
-    DrawingHandler("pencil", 0, 0, MessageendX, MessageendY);
-    pencilPath.push({ x: MessageendX, y: MessageendY });
+
+    console.log(streamPrevX,streamPrevY)
+    if (streamPrevX === null || streamPrevY === null) {
+        // ctx.beginPath();
+          streamPrevX = myMouseX;
+          streamPrevY = myMouseY;
+        }
+
+        ctx.moveTo(streamPrevX, streamPrevY)
+        ctx.lineTo(MessageendX,MessageendY);
+        ctx.stroke();
+        remotePencilPath.push({ x: MessageendX, y: MessageendY });
+        // Update prev point
+        streamPrevX = MessageendX;
+        streamPrevY = MessageendY;
+
+    // lastRemotePoint = { x: MessageendX, y: MessageendY };
   } else {
-    DrawingHandler(shape, myMouseX, myMouseY, MessageendX, MessageendY);
+    DrawingHandler(shape, myMouseX, myMouseY, MessageendX, MessageendY,Localfill,Localstroke,LocalstrokeWidth);
   }
 
   if (!isclicked) {
-    finalizeShape(shape, myMouseX, myMouseY, MessageendX, MessageendY);
+    finalizeShape(shape, myMouseX, myMouseY, MessageendX, MessageendY,Localfill,Localstroke,LocalstrokeWidth);
+    lastRemotePoint = null;
+    streamPrevX = null;
+    streamPrevY = null;
+    
   }
 }
 
@@ -342,18 +373,17 @@ function finalizeShape(
   myMouseX: number,
   myMouseY: number,
   endX: number,
-  endY: number
+  endY: number,
+  Localfill:string|"",
+  Localstroke:string|"",
+  LocalstrokeWidth:number|1,
 ) {
   if (shape === "pencil") {
-    allExistingShapes.push({
-      shape: "pencil",
-      points: [...pencilPath],
-      Localfill: Localfill,
-      Localstroke: Localstroke,
-      LocalstrokeWidth: LocalstrokeWidth,
-    } as PencilShape);
+    console.log("first"+pencilPath.length)
+    console.log("second"+remotePencilPath.length)
+    finalizePencil(pencilPath, Localfill, Localstroke, LocalstrokeWidth);
+    finalizePencil(remotePencilPath, Localfill, Localstroke, LocalstrokeWidth);
 
-    pencilPath = [];
   } else if (shape !== "grab") {
     allExistingShapes.push({
       shape,
@@ -381,3 +411,18 @@ function finalizeShape(
     });
   }
 }
+
+function finalizePencil(path: Cords[], fill: string, stroke: string, strokeWidth: number) {
+  if (path.length > 0) {
+    allExistingShapes.push({
+      shape: "pencil",
+      points: [...path],
+      Localfill: fill,
+      Localstroke: stroke,
+      LocalstrokeWidth: strokeWidth,
+    } as PencilShape);
+
+    path.length = 0; // clear in-place (no need to reassign)
+  }
+}
+
