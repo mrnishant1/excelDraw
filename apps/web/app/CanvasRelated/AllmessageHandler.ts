@@ -3,7 +3,7 @@ import { ToolType } from "../Types/tooltype";
 import { ChatType } from "../Types/tooltype";
 
 export function AllmessageHandler(msg: string) {
-  console.log("message came to AllmessageHandler:", msg);
+  
   //Parse message to JSON--------
 
   const message_recieved: {
@@ -20,16 +20,16 @@ export function AllmessageHandler(msg: string) {
         shape: ToolType;
         myMouseX: number;
         myMouseY: number;
-        endX: number;
-        endY: number;
+        movingX: number;
+        movingY: number;
         isclicked: boolean;
       } = JSON.parse(message_recieved.content);
       DrawingMessageHandler(
         parsedDrawingMessage.shape,
         parsedDrawingMessage.myMouseX,
         parsedDrawingMessage.myMouseY,
-        parsedDrawingMessage.endX,
-        parsedDrawingMessage.endY,
+        parsedDrawingMessage.movingX,
+        parsedDrawingMessage.movingY,
         parsedDrawingMessage.isclicked
       );
 

@@ -4,31 +4,27 @@ import { useShapeStore } from "@/hooks/useShape";
 import { ToolType } from "../Types/tooltype";
 import { RoughCanvas } from "roughjs/bin/canvas";
 import { ChatType } from "../Types/tooltype";
-// import { serverSocket } from "@/hooks/serverSocket";
 
-let allExistingShapes: CurrentShape[] = [];
-// localStorage.setItem("shapes", JSON.stringify(allExistingShapes));
+// import { serverSocket } from "@/hooks/serverSocket";
+import { CurrentShape, Shape, PencilShape, Cords } from "../Types/tooltype";
+
+let allExistingShapes: Shape[] = [];
 
 let shape: ToolType;
 let isclicked = false;
 let myMouseX: number | null = null;
 let myMouseY: number | null = null;
-let endX: number | null = null;
-let endY: number | null = null;
 let rcs: RoughCanvas;
 let ctx: CanvasRenderingContext2D | null;
 let globalsocket: Socket | null;
 let LocalRoomId: string;
-let Localfill: string = "";
+let Localfill: string = "red";
 let Localstroke: string = "";
-let LocalstrokeWidth: number = 10;
+let LocalstrokeWidth: number = 1;
+let pencilPath: Cords[] = [];
 
-interface CurrentShape {
-  shape: ToolType;
-  myMouseX: number;
-  myMouseY: number;
-  endX: number;
-  endY: number;
+function isPencil(s: Shape): s is PencilShape {
+  return s.shape === "pencil";
 }
 
 export function CanvastoDraw(
@@ -45,6 +41,7 @@ export function CanvastoDraw(
 
   rcs = rough.canvas(canvas);
   ctx = canvas.getContext("2d");
+
   if (!socketstore) {
     console.log("socket and globalsocket isn't here");
     globalsocket = null;
@@ -55,9 +52,10 @@ export function CanvastoDraw(
   const rect = canvas.getBoundingClientRect();
 
   if (!ctx) return;
+
   // ✅ define handlers with stable references
   const handleMouseDown = (e: MouseEvent) => mousedown(e);
-  const handleMouseUp = (e: MouseEvent) => mouseup(e);
+  const handleMouseUp = (e: MouseEvent) => mouseup(e, ctx);
   const handleMouseMove = (e: MouseEvent) => {
     // Gets the shape value {GLOBAL ZUSTAND STATE VARIABLE}.................................................
     shape = useShapeStore.getState().shape;
@@ -84,7 +82,7 @@ const mousedown = (e: MouseEvent) => {
   myMouseX = e.clientX - rect.left;
   myMouseY = e.clientY - rect.top;
 };
-
+//Check-------calls Drawinghandler to draw
 const mousemove = (
   e: MouseEvent,
   shape: ToolType,
@@ -94,29 +92,42 @@ const mousemove = (
 ) => {
   if (!isclicked || myMouseX == null || myMouseY == null) return;
 
-  endX = e.clientX - rect.left; // current X relative to canvas
-  endY = e.clientY - rect.top; // current Y relative to canvas
+  let movingX = e.clientX - rect.left; // current X relative to canvas
+  let movingY = e.clientY - rect.top; // current Y relative to canvas
 
   if (!ctx) {
     console.log("No canvas contextRendere2D");
     return;
   }
+  // ctx.beginPath();
 
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // ✅ prevent spam
-  drawAgainPreviousShape();
+  if (shape === "pencil") {
+    DrawingHandler(
+      shape,
+      0,
+      0,
+      movingX,
+      movingY,
+      Localfill,
+      Localstroke,
+      LocalstrokeWidth
+    );
+  } else {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // ✅ prevent spam
+    DrawingHandler(
+      shape,
+      myMouseX,
+      myMouseY,
+      movingX,
+      movingY,
+      Localfill,
+      Localstroke,
+      LocalstrokeWidth
+    );
+    drawAgainPreviousShape(ctx);
+  }
 
-  DrawingHandler(
-    shape,
-    myMouseX,
-    myMouseY,
-    endX,
-    endY,
-    Localfill,
-    Localstroke,
-    LocalstrokeWidth
-  );
-
-  let localshape = { shape, myMouseX, myMouseY, endX, endY, isclicked };
+  let localshape = { shape, myMouseX, myMouseY, movingX, movingY, isclicked };
   //UserId neeed to put here instead of hardcode one---------------------------------------------------------------------?????????????????????????ERORRRRRRRRRRRRRRRRRRRRRRRRRR
   convertAndSend(
     "a",
@@ -125,29 +136,24 @@ const mousemove = (
     JSON.stringify(localshape)
   );
 };
-
-const mouseup = (e: MouseEvent) => {
+//check>-------shapes push or shape dislocate on grab
+const mouseup = (e: MouseEvent, ctx: CanvasRenderingContext2D | null) => {
   isclicked = false;
-
   if (myMouseX == null || myMouseY == null) return;
+  if (!ctx) {
+    console.log("no ctx here");
+    return;
+  }
+  ctx.beginPath(); //this resets the last cordinates to start with new one where clicked
 
   const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
-  endX = e.clientX - rect.left;
-  endY = e.clientY - rect.top;
-  let localshape = { shape, myMouseX, myMouseY, endX, endY };
+  let endX = e.clientX - rect.left;
+  let endY = e.clientY - rect.top;
+  let movingX = endX;
+  let movingY = endY;
+  let localshape = { shape, myMouseX, myMouseY, movingX, movingY, isclicked };
+  finalizeShape(shape, myMouseX, myMouseY, endX, endY); //Also resets pencilPath
 
-  if (shape != "grab") {
-    allExistingShapes.push(localshape);
-  } else {
-    allExistingShapes.forEach((shape) => {
-      if (endX && endY && myMouseX && myMouseY) {
-        shape.myMouseX += viewOffsetX;
-        shape.myMouseY += viewOffsetY;
-        shape.endX += viewOffsetX;
-        shape.endY += viewOffsetY;
-      }
-    });
-  }
   //this need to be changes userId is hardcoded for now-----------
   convertAndSend(
     "a",
@@ -157,34 +163,47 @@ const mouseup = (e: MouseEvent) => {
   );
 };
 
-export function drawAgainPreviousShape() {
-  allExistingShapes.forEach((shape) => {
-    DrawingHandler(
-      shape.shape,
-      shape.myMouseX,
-      shape.myMouseY,
-      shape.endX,
-      shape.endY,
-      Localfill,
-      Localstroke,
-      LocalstrokeWidth
-      // rcs
-    );
+// check----- Draws all Previous Shapes
+export function drawAgainPreviousShape(ctx:CanvasRenderingContext2D) {
+  allExistingShapes.forEach((s) => {
+    if (s.shape === "pencil") {
+      console.log("Previous pencil called ");
+      ctx.beginPath();
+      s.points.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+    } else {
+      DrawingHandler(
+        s.shape,
+        s.myMouseX,
+        s.myMouseY,
+        s.endX,
+        s.endY,
+        s.Localfill,
+        s.Localstroke,
+        s.LocalstrokeWidth
+        // rcs
+      );
+    }
   });
 }
-
+// check----- Draws Shapes
 export function DrawingHandler(
   shape: ToolType,
   myMouseX: number,
   myMouseY: number,
   endX: number,
   endY: number,
-  fill: string,
-  stroke: string,
-  strokeWidth: number | 1
+  fill?: string,
+  stroke?: string,
+  strokeWidth?: number | 1
 
   // rcs: RoughCanvas
 ) {
+  console.log("DrawingHandler called:", shape, myMouseX, myMouseY, endX, endY);
+
   if (!ctx) {
     console.log("No canvas contextRendere2D");
     return;
@@ -203,9 +222,7 @@ export function DrawingHandler(
         myMouseX,
         myMouseY,
         Math.abs(endY - myMouseY) + Math.abs(endX - myMouseX),
-        {  fill: Localfill,
-        stroke: Localstroke,
-        strokeWidth: strokeWidth,}
+        { fill: Localfill, stroke: Localstroke, strokeWidth: strokeWidth }
       );
       break;
     case "ellipse":
@@ -214,9 +231,7 @@ export function DrawingHandler(
         myMouseY,
         Math.abs(endX - myMouseX),
         Math.abs(endY - myMouseY),
-        { fill: Localfill,
-        stroke: Localstroke,
-        strokeWidth: strokeWidth, }
+        { fill: Localfill, stroke: Localstroke, strokeWidth: strokeWidth }
       );
       break;
     case "line":
@@ -226,8 +241,14 @@ export function DrawingHandler(
         strokeWidth: strokeWidth,
       });
       break;
+
     case "pencil":
-      rcs.rectangle(endX, endY, 0.2, 0.2);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+      ctx.beginPath(); // reset path to current point
+      ctx.moveTo(endX, endY);
+
+      pencilPath.push({ x: endX, y: endY });
 
       console.log("pencil");
       break;
@@ -248,28 +269,16 @@ export function DrawingHandler(
 
 let viewOffsetX = 0;
 let viewOffsetY = 0;
-
+//check----------Grabs Canvas
 function Grab(ctx: CanvasRenderingContext2D, dx: number, dy: number) {
   viewOffsetX = dx;
   viewOffsetY = dy;
 
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
   ctx.save();
   ctx.translate(viewOffsetX, viewOffsetY);
-  allExistingShapes.forEach((shape) => {
-    DrawingHandler(
-      shape.shape,
-      shape.myMouseX,
-      shape.myMouseY,
-      shape.endX,
-      shape.endY,
-      Localfill,
-      Localstroke,
-      LocalstrokeWidth
-      // rcs
-    );
-  });
+  //Redraw each shapes as on every GRAB call Canvas cleared----------------
+  drawAgainPreviousShape(ctx);
   ctx.restore();
 }
 
@@ -296,39 +305,79 @@ function convertAndSend(
   }
 }
 
+// let messagePencil:Cords[] =[];
 export function DrawingMessageHandler(
   shape: ToolType,
   myMouseX: number,
   myMouseY: number,
-  endX: number,
-  endY: number,
+  MessageendX: number,
+  MessageendY: number,
   isclicked: boolean
 ) {
-  if (!ctx) return;
+  if (!ctx) {
+    console.log("No CTX in drawingMessageHandler");
+    return;
+  }
+
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  drawAgainPreviousShape();
-  DrawingHandler(
-    shape,
-    myMouseX,
-    myMouseY,
-    endX,
-    endY,
-    Localfill,
-    Localstroke,
-    LocalstrokeWidth
-  );
+  drawAgainPreviousShape(ctx);
+
+  // draw the live one
+
+  if (shape === "pencil") {
+    DrawingHandler("pencil", 0, 0, MessageendX, MessageendY);
+    pencilPath.push({ x: MessageendX, y: MessageendY });
+  } else {
+    DrawingHandler(shape, myMouseX, myMouseY, MessageendX, MessageendY);
+  }
+
   if (!isclicked) {
-    if (shape != "grab") {
-      allExistingShapes.push({ shape, myMouseX, myMouseY, endX, endY });
-    } else {
-      allExistingShapes.forEach((shape) => {
-        if (endX && endY && myMouseX && myMouseY) {
-          shape.myMouseX += viewOffsetX;
-          shape.myMouseY += viewOffsetY;
-          shape.endX += viewOffsetX;
-          shape.endY += viewOffsetY;
-        }
-      });
-    }
+    finalizeShape(shape, myMouseX, myMouseY, MessageendX, MessageendY);
+  }
+}
+
+//CHECK--------Just Push shapes as json in allExistingShapes or On Grab changes cords---------------
+function finalizeShape(
+  shape: ToolType,
+  myMouseX: number,
+  myMouseY: number,
+  endX: number,
+  endY: number
+) {
+  if (shape === "pencil") {
+    allExistingShapes.push({
+      shape: "pencil",
+      points: [...pencilPath],
+      Localfill: Localfill,
+      Localstroke: Localstroke,
+      LocalstrokeWidth: LocalstrokeWidth,
+    } as PencilShape);
+
+    pencilPath = [];
+  } else if (shape !== "grab") {
+    allExistingShapes.push({
+      shape,
+      myMouseX,
+      myMouseY,
+      endX,
+      endY,
+      Localfill: Localfill,
+      Localstroke: Localstroke,
+      LocalstrokeWidth: LocalstrokeWidth,
+    } as CurrentShape);
+  } else {
+    allExistingShapes.forEach((s) => {
+      if (isPencil(s)) {
+        s.points.forEach((p) => {
+          p.x += viewOffsetX;
+          p.y += viewOffsetY;
+        });
+      } else {
+        s.myMouseX += viewOffsetX;
+        s.myMouseY += viewOffsetY;
+        s.endX += viewOffsetX;
+        s.endY += viewOffsetY;
+      }
+    });
   }
 }
