@@ -78,7 +78,7 @@ export default function SignInPage() {
         {/* Social buttons */}
         <div className="space-y-3 mb-6">
           <button
-            onClick={() => signIn("google")}
+            onClick={() => signIn("google", { callbackUrl: "/" })}
             className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-red-500 text-white font-medium shadow hover:bg-red-600 transition"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

@@ -1,4 +1,4 @@
-import { ToolType } from '@/app/Types/tooltype';
+import { Shape, ToolType } from '@/app/Types/tooltype';
 import {create} from 'zustand';
 import { Color } from '@/app/Types/tooltype';
 interface ToolState {
@@ -31,4 +31,25 @@ interface FillBg {
 export const useBGFill = create<FillBg>((set)=>({
   bgcolor: Color.Transparent,
   setbgcolor: (bgcolor: Color)=> set({bgcolor})
+}))
+
+interface SetStroke{
+  strokewidth: number;
+  setstrokewidth: (strokewidth: number)=>void
+}
+
+export const useStroke = create<SetStroke>((set)=>({
+  strokewidth: 1,
+  setstrokewidth: (strokewidth: number)=> set({strokewidth})
+}))
+
+interface CanvasBG{
+  CanvasBG: Color
+  setCanvasBG: (CanvasBG:Color)=>void
+}
+
+
+export const useCanvasBG = create<CanvasBG>((set)=>({
+  CanvasBG: Color.White,
+  setCanvasBG: (CanvasBG: Color)=> set({CanvasBG})
 }))

@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import ErrorPage from "@/app/component/error";
 import { ShareButton } from "../../../component/sharebutton";
+import { FaSave } from "react-icons/fa";
 
 // import
 interface Props {
@@ -30,9 +31,12 @@ export default async function RoomPage({ params }: Props) {
       const errorMessage = "You are not a member of this room."; 
       return <ErrorPage error={errorMessage} />;
   }
-  //frontend--------------------------------------
+  //frontend--------------------------------------CanvasSheet for Canvas----------> calls canvastoDraw that handes all drawing related matter
+  //------------------------------------ share button-----------> to share live collaboration
+  //----------------------toolbar for tools
   return (
     <div className="w-svw h-svh">
+      {/* <div className="fixed top-4 right-[10%] transform -translate-x-1/2 bg-[#d2e3e6]  rounded-lg p-5 flex hover:shadow-md active:scale-95 z-50"  >   {<FaSave/>} </div> */}
       <ShareButton params={roomId}/>
       <Toolbar />
       <CanvasSheet params={roomId} />

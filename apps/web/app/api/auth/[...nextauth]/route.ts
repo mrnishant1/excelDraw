@@ -86,6 +86,7 @@ export const authOptions: NextAuthOptions = {
 
       // Attach DB id to user object
       user.id = dbUser.id.toString();
+      
       return true;
     },
 

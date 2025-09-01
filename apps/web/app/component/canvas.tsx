@@ -7,13 +7,17 @@ import {
 
 import { AllmessageHandler } from "@/app/CanvasRelated/AllmessageHandler";
 import { useServerSocket } from "@/hooks/useserver";
+import { useCanvasBG } from "@/hooks/useShape";
+
+
+
 interface Props {
   params: string;
 }
 export function CanvasSheet({params}:Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { socket, connect, disconnect, loading } = useServerSocket();
-
+  
 
   //My code is Like building block, you'll find function as building block with lines like ---------------------------------------------------------------
   //My code is Like building block, you'll find function as building block with lines like ---------------------------------------------------------------
@@ -40,7 +44,7 @@ export function CanvasSheet({params}:Props) {
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width;
       canvas.height = rect.height;
-      drawAgainPreviousShape();
+      
     };
 
     handleResizeOrScroll(); // run once
@@ -95,13 +99,15 @@ export function CanvasSheet({params}:Props) {
     };
   }, [loading]);
 
+  const {CanvasBG,setCanvasBG} = useCanvasBG();
+
   return (
     <div className="bg-gray-400 w-[100%] h-[100%]">
       <canvas
         ref={canvasRef}
         style={{
           border: "2px solid white",
-          backgroundColor: "white",
+          backgroundColor: `${CanvasBG}`,
           width: "100%", // CSS-driven
           height: "100%", // CSS-driven
         }}
