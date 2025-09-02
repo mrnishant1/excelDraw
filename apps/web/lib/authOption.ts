@@ -1,8 +1,7 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import { prisma } from "@/lib/db";
+import { prisma } from "../lib/db";
 import { NextAuthOptions } from "next-auth";
-import { loginSchema } from "@/app/signin/loginschema";
 import z from "zod";
 import bcrypt from "bcryptjs";
 

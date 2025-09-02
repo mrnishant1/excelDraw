@@ -1,11 +1,11 @@
 import Toolbar from "../../../component/toolbar";
-import { CanvasSheet } from "@/app/component/canvas";
-import { authOptions } from "@/lib/authOption";
+import { CanvasSheet } from "../../../component/canvas";
+import { authOptions } from "../../../../lib/authOption";
 
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import ErrorPage from "@/app/component/error";
+import { prisma } from "../../../../lib/db";
+import ErrorPage from "../../../../app/component/error";
 import { ShareButton } from "../../../component/sharebutton";
 import { FaSave } from "react-icons/fa";
 

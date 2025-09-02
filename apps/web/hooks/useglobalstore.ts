@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Shape } from "@/app/Types/tooltype";
+import { Shape } from "../app/Types/tooltype";
 
 
 interface ExistingStore {

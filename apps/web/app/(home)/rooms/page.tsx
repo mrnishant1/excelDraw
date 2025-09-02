@@ -1,7 +1,7 @@
-import RoomCard from "@/app/component/roomcard";
-import { authOptions } from "@/lib/authOption";
+import RoomCard from "../../component/roomcard";
+import { authOptions } from "../../../lib/authOption";
 
-import { prisma } from "@/lib/db";
+import { prisma } from "../../../lib/db";
 import { getServerSession } from "next-auth";
 
 export default async function Rooms() {

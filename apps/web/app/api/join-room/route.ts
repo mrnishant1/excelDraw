@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { prisma } from "../../../lib/db";
 import { Role } from "../../../node_modules/generated/prisma";
 import { NextRequest, NextResponse } from "next/server";
 

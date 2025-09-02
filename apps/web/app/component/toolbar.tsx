@@ -1,6 +1,6 @@
 "use client";
-import { Color, ToolType } from "@/app/Types/tooltype";
-import { useBGFill, useCanvasBG, useShapeStore, useStroke } from "@/hooks/useShape";
+import { Color, ToolType } from "../../app/Types/tooltype";
+import { useBGFill, useCanvasBG, useShapeStore, useStroke } from "../../hooks/useShape";
 import { LuGrab } from "react-icons/lu";
 import { RiRectangleLine } from "react-icons/ri";
 import { FaRegCircle } from "react-icons/fa";
@@ -9,7 +9,7 @@ import { GrSelect } from "react-icons/gr";
 import { IoMenu } from "react-icons/io5";
 import Sidemenu from "./sidemenu";
 import { useState } from "react";
-import { useStrokeColor } from "@/hooks/useShape";
+import { useStrokeColor } from "../../hooks/useShape";
 
 
 export default function Toolbar() {

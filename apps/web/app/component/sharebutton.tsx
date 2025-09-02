@@ -1,9 +1,9 @@
 "use client"
 import { useState,useEffect, Reference } from "react";
 import { redirect } from "next/navigation";
-import { useServerSocket } from "@/hooks/useserver";
+import { useServerSocket } from "../../hooks/useserver";
 import { FaShare } from "react-icons/fa";
-import { CanvastoDraw } from "@/app/CanvasRelated/Allcanvas";
+
 // import
 interface Props {
   params:string|null,

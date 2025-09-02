@@ -1,10 +1,10 @@
 import { Socket } from "socket.io-client";
 import rough from "roughjs";
-import { useStrokeColor, useShapeStore, useBGFill, useStroke } from "@/hooks/useShape";
+import { useStrokeColor, useShapeStore, useBGFill, useStroke } from "../../hooks/useShape";
 import { ToolType } from "../Types/tooltype";
 import { RoughCanvas } from "roughjs/bin/canvas";
 import { ChatType } from "../Types/tooltype";
-import { useExistingStore } from "@/hooks/useglobalstore";
+import { useExistingStore } from "../../hooks/useglobalstore";
 
 // import { serverSocket } from "@/hooks/serverSocket";
 import { CurrentShape, Shape, PencilShape, Cords } from "../Types/tooltype";
