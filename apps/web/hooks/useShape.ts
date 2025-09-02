@@ -1,6 +1,6 @@
-import { Shape, ToolType } from '@/app/Types/tooltype';
+import { Shape, ToolType } from '../app/Types/tooltype';
 import {create} from 'zustand';
-import { Color } from '@/app/Types/tooltype';
+import { Color } from '../app/Types/tooltype';
 interface ToolState {
   shape: ToolType;
   setShape: (shape: ToolType) => void;
