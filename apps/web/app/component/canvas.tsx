@@ -3,11 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import {
   CanvastoDraw,
   drawAgainPreviousShape,
-} from "@/app/CanvasRelated/Allcanvas";
+} from "../CanvasRelated/Allcanvas";
 
-import { AllmessageHandler } from "@/app/CanvasRelated/AllmessageHandler";
-import { useServerSocket } from "@/hooks/useserver";
-import { useCanvasBG } from "@/hooks/useShape";
+import { AllmessageHandler } from "../CanvasRelated/AllmessageHandler";
+import { useServerSocket } from "../../hooks/useserver";
+import { useCanvasBG } from "../../hooks/useShape";
 
 
 

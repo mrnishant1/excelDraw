@@ -2,7 +2,7 @@
 import { useEffect, useId, useState } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import { createRoomSchema, roomschema } from "@/app/signin/loginschema";
+import { createRoomSchema, roomschema } from "../../signin/loginschema";
 import { redirect } from "next/navigation";
 
 //-----------------------API endpoints------------------
