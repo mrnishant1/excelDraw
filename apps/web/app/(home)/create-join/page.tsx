@@ -98,7 +98,7 @@ export default function CreateRoom() {
 
   return (
     <>
-      <div className="min-h-screen m-0 p-0 flex items-center justify-center bg-gradient-to-tr from-[#838fa1] via-[#9bc8e4] to-[#579aa9]">
+      <div className="min-h-screen m-0 p-0 flex items-center justify-center">
         <div className="w-[30%] h-[100%] m-0 p-[1%] bg-none border-2 border-gray-800 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
           <label className="relative inline-flex items-center cursor-pointer mb-4">
             <input

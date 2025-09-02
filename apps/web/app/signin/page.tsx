@@ -41,7 +41,7 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-pink-100 via-white to-blue-100 px-4">
+    <div className="flex h-screen items-center justify-center">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
         <label className="relative inline-flex items-center cursor-pointer mb-4">
           <input

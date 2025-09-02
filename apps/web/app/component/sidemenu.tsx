@@ -30,7 +30,7 @@ export default function Sidemenu({visiblety}:{visiblety:ReactNode}) {
 
             <div className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center active:scale-90  cursor-pointer" onClick={()=>{clearShapes(); location.reload()}} >   {<IoIosNuclear/>} Clear Canvas</div>
             <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center active:scale-90" href="/rooms"    >   {<MdMeetingRoom/>} Rooms</Link>
-            <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center active:scale-90" href="/api/signin">  {<CiLogin/>} Login</Link>
+            <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center active:scale-90" href="/signin">  {<CiLogin/>} Login</Link>
             <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center active:scale-90" href="/create-join"> {<TbAccessPoint/>} Create Room</Link>
             <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center active:scale-90" href="/create-join"> {<RiGroup2Line/>} Join Room</Link>
             <Link className="hover:bg-[#969b9b] w-[100%] rounded-md transition-all duration-400 flex flex-row gap-1.5 items-center active:scale-90" href="/api/auth/signout"> {<IoMdLogOut/>} Logout</Link>
