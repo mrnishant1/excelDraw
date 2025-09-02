@@ -12,7 +12,7 @@ import { useCanvasBG } from "@/hooks/useShape";
 
 
 interface Props {
-  params: string;
+  params: string|null;
 }
 export function CanvasSheet({params}:Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,7 +40,6 @@ export function CanvasSheet({params}:Props) {
     const handleResizeOrScroll = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      console.log("handleresize called---------");
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width;
       canvas.height = rect.height;
@@ -67,7 +66,7 @@ export function CanvasSheet({params}:Props) {
     if (loading) {
       // Only local drawing
       cleanup = CanvastoDraw(canvas);
-    } else if (socket) {
+    } else if (socket&&params) {
       // Collaborative drawing with socket
       cleanup = CanvastoDraw(canvas,params, socket);
     }
@@ -81,18 +80,16 @@ export function CanvasSheet({params}:Props) {
   //Helps in Message to other user in room-----------------------------
   
   useEffect(() => {
-    console.log("useEffect ran that listen message in canvas.tsx")
+ 
     if (!socket) {console.log("There is no socke in canvas.tsx");return};
-    
-    console.log("socket that is in canvas.ts"+socket)
+  
     socket.on("message", (msg: string) => {
-      console.log(msg+"msg that come into canvas.tsx-------")
+     
       AllmessageHandler(msg);
     });
 
     return () => {
       if (socket) socket.off("message", (msg: string) => {
-      console.log(msg+"msg that come into canvas.tsx-------")
       AllmessageHandler(msg);
     });
       disconnect();

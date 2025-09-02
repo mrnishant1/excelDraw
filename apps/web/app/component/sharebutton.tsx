@@ -6,7 +6,7 @@ import { FaShare } from "react-icons/fa";
 import { CanvastoDraw } from "@/app/CanvasRelated/Allcanvas";
 // import
 interface Props {
-  params:string,
+  params:string|null,
 }
 
 export function ShareButton({params}:Props) {
@@ -14,6 +14,7 @@ export function ShareButton({params}:Props) {
   const { connect } = useServerSocket();
 
 const handleconnect = ()=>{
+  if(!params) return;
     connect(params);
     setOpen(()=>false)
 }

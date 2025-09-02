@@ -1,5 +1,6 @@
 import RoomCard from "@/app/component/roomcard";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOption";
+
 import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 

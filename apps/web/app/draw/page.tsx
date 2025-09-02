@@ -6,7 +6,7 @@ export default function draw() {
     <div className="w-svw h-svh">
       <ShareButton params={null}/>
       <Toolbar />
-      <CanvasSheet />
+      <CanvasSheet params={null} />
     </div>
   );
 }

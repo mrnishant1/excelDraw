@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { Role } from "@/lib/generated/prisma";
+import { Role } from "../../../node_modules/generated/prisma";
 import { redirect } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -16,7 +16,10 @@ export async function POST(req: NextRequest) {
     password
   );
 
-  if (!roomcode || !userId) return ("roomcode or userID were missing");
+  if (!roomcode || !userId)  return NextResponse.json(
+      { error: "Missing parameters", message: "roomcode or userID were missing" },
+      { status: 400 }
+    );
   const existingRoom = await prisma.rooms.findUnique({
     where: { roomcode: roomcode },
   });

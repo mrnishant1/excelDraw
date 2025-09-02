@@ -30,7 +30,7 @@ io.on("connection", (socket) => {
 
 
   socket.on("sendMessage", ({ roomId, message }) => {
-     console.log("message came on socketserver index.ts")
+     
     socket.to(roomId).emit("message", message);
   });
 

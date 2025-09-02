@@ -1,6 +1,7 @@
 import Toolbar from "../../../component/toolbar";
 import { CanvasSheet } from "@/app/component/canvas";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOption";
+
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
@@ -9,13 +10,11 @@ import { ShareButton } from "../../../component/sharebutton";
 import { FaSave } from "react-icons/fa";
 
 // import
-interface Props {
-  params: { id: string };
-}
 
-export default async function RoomPage({ params }: Props) {
+export default async function RoomPage( {params}: {params: Promise<{ id: string }>}) {
   
-  const roomId = params.id
+  const {id}  = await params;
+ 
 
   //now get the userid from session see it membership & roomId
   const session = await getServerSession(authOptions);
@@ -23,7 +22,7 @@ export default async function RoomPage({ params }: Props) {
   const userId = session.user.id;
   console.log(userId)
   const seeformembership = await prisma.membership.findFirst({
-    where: { userId: userId, roomId: roomId },
+    where: { userId: userId, roomId: id },
   });
 
   
@@ -37,9 +36,9 @@ export default async function RoomPage({ params }: Props) {
   return (
     <div className="w-svw h-svh">
       {/* <div className="fixed top-4 right-[10%] transform -translate-x-1/2 bg-[#d2e3e6]  rounded-lg p-5 flex hover:shadow-md active:scale-95 z-50"  >   {<FaSave/>} </div> */}
-      <ShareButton params={roomId}/>
+      <ShareButton params={id}/>
       <Toolbar />
-      <CanvasSheet params={roomId} />
+      <CanvasSheet params={id} />
     </div>
   );
 }

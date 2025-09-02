@@ -310,7 +310,6 @@ export function DrawingHandler(
 
       pencilPath.push({ x: endX, y: endY });
 
-      console.log("pencil");
       break;
     case "select":
       console.log("select mode");
