@@ -1,5 +1,6 @@
 import { prisma } from "../../../lib/db";
-import { Role } from "../../../node_modules/generated/prisma/client";
+// import { Role } from "../../../node_modules/generated/prisma/client";
+import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 

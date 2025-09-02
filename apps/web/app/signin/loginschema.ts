@@ -6,7 +6,7 @@ export const loginSchema = z.object({
 });
 
 export const roomschema = z.object({
-    roomcode: z.string().max(10, { error: "Too short! max 10 digit" }).min(1,{ error: "Too short! min 1 digit" }),
+    roomcode: z.string().min(1,{ error: "Too short! min 1 digit" }),
     userId: z.string(),
     intent: z.enum(["signin", "signup"]).default("signin"),
     password: z.string().min(6, { error: "Too short! min 6 digit" }).max(10,{ error: "Too short! max 10 digit" }).optional(),
